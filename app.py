@@ -1,5 +1,4 @@
-import googlemaps
-from googlemaps import places
+
 import os
 import config
 import time
@@ -7,7 +6,6 @@ import timeit
 from pandas import json_normalize, concat, read_csv
 import requests
 import json
-import pytesseract as pyt
 from PIL import Image
 from bs4 import BeautifulSoup
 import re
@@ -19,9 +17,20 @@ from pipes import quote
 import shutil
 from urllib import request
 import doctest
+from dotenv import load_dotenv
 
 
-def retrieve_google_place(api_key=config.API_KEY, coordinate=config.LOCATION, radius=5000):
+# Load the environment variables from the .env file
+load_dotenv()
+
+import geocoder
+
+g = geocoder.ip('me')
+if g.ok:
+    lat, lng = g.latlng
+    LOCATION = f"{lat},{lng}"
+
+def retrieve_google_place(api_key=os.getenv("PLACES_API_KEY"), coordinate=LOCATION, radius=5000):    
     """Gather fields from the google place API
 
     :param api_key: client's API key obtained from google cloud console, will look for local environment variable first
@@ -56,6 +65,7 @@ def retrieve_google_place(api_key=config.API_KEY, coordinate=config.LOCATION, ra
         results = json.loads(res.content)
         response_list.extend(results['results'])
         time.sleep(2)
+    print(response_list)
     return response_list
 
 
@@ -68,7 +78,7 @@ def create_response_df(response_list):
     return df
 
 
-def retrieve_google_place_website(api_key=config.API_KEY, place_id=None):
+def retrieve_google_place_website(api_key=os.getenv("PLACES_API_KEY"), place_id=None):
     """Retrieve the website for the provided place_id
 
     :param api_key: client's API key obtained from google cloud console, will look for local environment variable first
@@ -134,11 +144,6 @@ def scrape_social_media(url):
         return social_media_url
 
 
-def process_image(pic):
-    pyt.pytesseract.tesseract_cmd = r'C:\Program Files\Tesseract-OCR\tesseract.exe'
-    print(pyt.image_to_string(Image.open(pic)))
-
-
 def instagram_discount_text(json_file):
     """Process the captions of a post to identify the posts with highest relevance to discount"""
     with open(json_file, 'r', encoding='utf-8') as json_format:
@@ -181,16 +186,16 @@ def printTohtml(relevant_post):
 
 if __name__ == "__main__":
     print([i['place_id'] for i in retrieve_google_place(radius=10000)])
-    # restaurant_df = read_csv('restaurant_on_google.csv')
-    # res_place_id_list = restaurant_df['place_id'].tolist()
-    # res_official_url = retrieve_list_of_websites(res_place_id_list)
-    # scrape_list = [(url, requests.get(url).status_code) for url in res_official_url if
-    #                requests.get(url).status_code < 400]
-    # print(len(scrape_list))
-    # res_instagram_url = [scrape_social_media(res[0]) for res in scrape_list]
-    # print(res_instagram_url, len(res_instagram_url))
+    restaurant_df = read_csv('restaurant_on_google.csv')
+    res_place_id_list = restaurant_df['place_id'].tolist()
+    res_official_url = retrieve_list_of_websites(res_place_id_list)
+    scrape_list = [(url, requests.get(url).status_code) for url in res_official_url if
+                   requests.get(url).status_code < 400]
+    print(len(scrape_list))
+    res_instagram_url = [scrape_social_media(res[0]) for res in scrape_list]
+    print(res_instagram_url, len(res_instagram_url))
 
-    # process_image('static/101250309_1440344812830050_4269460284752014425_n.jpg')
-    # relevant_list = instagram_discount_text('static/konjiki_ramen.json')
-    # printTohtml(relevant_list)
-    # start_instagram_scraper()
+    process_image('static/101250309_1440344812830050_4269460284752014425_n.jpg')
+    relevant_list = instagram_discount_text('static/konjiki_ramen.json')
+    printTohtml(relevant_list)
+    start_instagram_scraper()

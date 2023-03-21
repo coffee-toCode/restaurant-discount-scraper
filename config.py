@@ -1,4 +1,5 @@
 from os import environ
 
-API_KEY = environ.get('PLACE_API_KEY')
-LOCATION = environ.get('LOCATION')
+
+#moved 'LOCATION' to app.py temporarily while I figure out how to get it to work with the geocoder function
+#LOCATION = environ.get('LOCATION')
