@@ -17,18 +17,25 @@ from pipes import quote
 import shutil
 from urllib import request
 import doctest
-from dotenv import load_dotenv
+import csv
+
 
 
 # Load the environment variables from the .env file
+from dotenv import load_dotenv
 load_dotenv()
 
-import geocoder
 
+# Generate the LOCATION variable from the user's device IP address.
+# This is used to get the location of the user's device.
+import geocoder
 g = geocoder.ip('me')
 if g.ok:
     lat, lng = g.latlng
     LOCATION = f"{lat},{lng}"
+
+
+response_list = []
 
 def retrieve_google_place(api_key=os.getenv("PLACES_API_KEY"), coordinate=LOCATION, radius=5000):    
     """Gather fields from the google place API
@@ -47,7 +54,6 @@ def retrieve_google_place(api_key=os.getenv("PLACES_API_KEY"), coordinate=LOCATI
             'geometry.location.lng'
     """
     search_endpoint = "https://maps.googleapis.com/maps/api/place/nearbysearch/json"
-    response_list = []
     parameters = {
         "key": api_key,
         "location": coordinate,
@@ -65,17 +71,36 @@ def retrieve_google_place(api_key=os.getenv("PLACES_API_KEY"), coordinate=LOCATI
         results = json.loads(res.content)
         response_list.extend(results['results'])
         time.sleep(2)
-    print(response_list)
     return response_list
 
+#pass response_list into a csv file for later use.
+def generate_csv(response_list):
+    with open('response_list.csv', mode='w', newline='') as csv_file:
+        fieldnames = ['name', 'place_id', 'rating', 'types', 'user_ratings_total', 'geometry.location.lat', 'geometry.location.lng']
+        writer = csv.DictWriter(csv_file, fieldnames=fieldnames)
+        writer.writeheader()
+        for place in response_list:
+            writer.writerow({
+                'name': place.get('name'),
+                'place_id': place.get('place_id'),
+                'rating': place.get('rating'),
+                'types': ', '.join(place.get('types', [])),
+                'user_ratings_total': place.get('user_ratings_total'),
+                'geometry.location.lat': place.get('geometry', {}).get('location', {}).get('lat'),
+                'geometry.location.lng': place.get('geometry', {}).get('location', {}).get('lng')
+            })
 
+retrieve_google_place()
+
+import pandas as pd
 def create_response_df(response_list):
-    wanted_columns = ['name', 'place_id', 'rating', 'types', 'user_ratings_total', 'geometry.location.lat',
-                      'geometry.location.lng']
+    wanted_columns = ['name', 'place_id', 'rating', 'types', 'user_ratings_total', 'geometry.location.lat', 'geometry.location.lng']
 
     new_response_list = [json_normalize(i, errors='ignore')[wanted_columns] for i in response_list]
     df = concat(new_response_list)
+    df.to_csv('my_data.csv', index=False)
     return df
+
 
 
 def retrieve_google_place_website(api_key=os.getenv("PLACES_API_KEY"), place_id=None):
