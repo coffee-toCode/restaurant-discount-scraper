@@ -1,7 +1,9 @@
 import pandas as pd
-import sys
-sys.path.append('D:/Portfolio/DiscountWebScraper/restaurant-discount-scraper')
-import app
+from app import response_list
+import math
+
+
+print(response_list[6]) 
 
 # Read the CSV file into a Pandas DataFrame
 df = pd.read_csv('response_list.csv')
@@ -9,7 +11,7 @@ df = pd.read_csv('response_list.csv')
 # Display the DataFrame
 print(df.head(10))
 
-print(response_list)
+
 
 
 
