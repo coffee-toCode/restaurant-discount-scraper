@@ -13,7 +13,6 @@ from jinja2 import Template
 import io
 import sys
 import subprocess
-from pipes import quote
 import shutil
 from urllib import request
 import doctest
@@ -72,23 +71,26 @@ def retrieve_google_place(api_key=os.getenv("PLACES_API_KEY"), coordinate=LOCATI
         response_list.extend(results['results'])
         time.sleep(2)
     return response_list
+retrieve_google_place()
+print(response_list)
 
-#pass response_list into a csv file for later use.
-def generate_csv(response_list):
-    with open('response_list.csv', mode='w', newline='') as csv_file:
-        fieldnames = ['name', 'place_id', 'rating', 'types', 'user_ratings_total', 'geometry.location.lat', 'geometry.location.lng']
-        writer = csv.DictWriter(csv_file, fieldnames=fieldnames)
-        writer.writeheader()
-        for place in response_list:
-            writer.writerow({
-                'name': place.get('name'),
-                'place_id': place.get('place_id'),
-                'rating': place.get('rating'),
-                'types': ', '.join(place.get('types', [])),
-                'user_ratings_total': place.get('user_ratings_total'),
-                'geometry.location.lat': place.get('geometry', {}).get('location', {}).get('lat'),
-                'geometry.location.lng': place.get('geometry', {}).get('location', {}).get('lng')
-            })
+
+# #pass response_list into a csv file for later use.
+# def generate_csv(response_list):
+#     with open('response_list.csv', mode='w', newline='') as csv_file:
+#         fieldnames = ['name', 'place_id', 'rating', 'types', 'user_ratings_total', 'geometry.location.lat', 'geometry.location.lng']
+#         writer = csv.DictWriter(csv_file, fieldnames=fieldnames)
+#         writer.writeheader()
+#         for place in response_list:
+#             writer.writerow({
+#                 'name': place.get('name'),
+#                 'place_id': place.get('place_id'),
+#                 'rating': place.get('rating'),
+#                 'types': ', '.join(place.get('types', [])),
+#                 'user_ratings_total': place.get('user_ratings_total'),
+#                 'geometry.location.lat': place.get('geometry', {}).get('location', {}).get('lat'),
+#                 'geometry.location.lng': place.get('geometry', {}).get('location', {}).get('lng')
+#             })
 
 # retrieve_google_place()
 

@@ -1,9 +1,7 @@
 import pandas as pd
 from app import response_list
-import math
 
 
-print(response_list[6]) 
 
 # Read the CSV file into a Pandas DataFrame
 df = pd.read_csv('response_list.csv')
