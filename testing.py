@@ -1,41 +1,47 @@
-import tkinter as tk
-from tkinter import ttk
-from app import response_list
-    
-root = tk.Tk()
-root.title("Google Places API")
+import os
+import json
+import requests
 
-# Add a header label
-header_label = tk.Label(root, text="Google Places API", font=("Arial", 20))
-header_label.pack(pady=20)
+def retrieve_google_place_website(api_key=os.getenv("PLACES_API_KEY"), place_id=None):
+    """Retrieve the website for the provided place_id
 
-# Add a treeview to display the results
-tree = tk.ttk.Treeview(root)
-tree["columns"] = ("Name", "Place ID", "Rating", "Types", "User Ratings", "Latitude", "Longitude")
-tree.heading("#0", text="Index")
-tree.heading("Name", text="Name")
-tree.heading("Place ID", text="Place ID")
-tree.heading("Rating", text="Rating")
-tree.heading("Types", text="Types")
-tree.heading("User Ratings", text="User Ratings")
-tree.heading("Latitude", text="Latitude")
-tree.heading("Longitude", text="Longitude")
+    :param api_key: client's API key obtained from google cloud console, will look for local environment variable first
+    :type api_key: string
 
-index = 0
-for result in response_list:
-    index += 1
-    name = result.get("name", "")
-    place_id = result.get("place_id", "")    
-    rating = result.get("rating", "")
-    types = ", ".join(result.get("types", []))
-    user_ratings_total = result.get("user_ratings_total", "")
-    latitude = result.get("geometry", {}).get("location", {}).get("lat", "")
-    longitude = result.get("geometry", {}).get("location", {}).get("lng", "")
-    tree.insert("", tk.END, index, text=index, values=(name, place_id, rating, types, user_ratings_total, latitude, longitude))
+    :param place_id: unique identifier of a place
+    :type place_id: string
 
-tree.pack(fill="both", expand=True, padx=20, pady=20)
-
-root.mainloop()
+    :rtype: string that represents a website url
+    """
+    place_endpoint = "https://maps.googleapis.com/maps/api/place/details/json"    
+    parameters = {
+        "key": api_key,
+        "place_id": place_id,
+        "fields": "website"
+    }
+    response = requests.get(place_endpoint, params=parameters)
+    results = json.loads(response.content)
+    website_url = results['result']['website']
+    print(website_url)
+    return website_url
 
 
-"""This will display the results from `response_list` in a treeview widget with sortable columns. The user can interact with the treeview by clicking on the column headers to sort the results."""
+def retrieve_list_of_websites(place_id_list):
+    """Collects a list of website url from the list of place_id
+
+    :param place_id_list: list of place_id from pinging API or csv extracts
+    :type place_id_list: list
+
+    :rtype: list of website urls
+    """
+    website_list = []
+    i = 0
+
+    while i < len(place_id_list):
+        try:
+            website_list.append(retrieve_google_place_website(place_id=place_id_list[i]))
+        except KeyError:
+            print('Restaurant {} does not have a website.'.format(place_id_list[i]))
+        i += 1
+    print(website_list)
+    return website_list
