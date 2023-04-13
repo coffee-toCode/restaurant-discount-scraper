@@ -1,9 +1,14 @@
 # Import the necessary libraries for using the Google Places API
 import googlemaps
 import geocoder
+import os
+from dotenv import load_dotenv
+load_dotenv()
+
+API_KEY = os.getenv("PLACES_API_KEY")
 
 # Create a Google Places API client
-gmaps = googlemaps.Client(api_key=os.getenv("PLACES_API_KEY"))
+gmaps = googlemaps.Client(key=API_KEY)
 
 # Generate the LOCATION variable from the user's device IP address.
 # This is used to get the location of the user's device.
