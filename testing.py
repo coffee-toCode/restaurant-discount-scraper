@@ -1,47 +1,42 @@
-import os
-import json
-import requests
+# Import the necessary libraries for using the Google Places API
+import googlemaps
+import geocoder
 
-def retrieve_google_place_website(api_key=os.getenv("PLACES_API_KEY"), place_id=None):
-    """Retrieve the website for the provided place_id
+# Create a Google Places API client
+gmaps = googlemaps.Client(api_key=os.getenv("PLACES_API_KEY"))
 
-    :param api_key: client's API key obtained from google cloud console, will look for local environment variable first
-    :type api_key: string
+# Generate the LOCATION variable from the user's device IP address.
+# This is used to get the location of the user's device.
 
-    :param place_id: unique identifier of a place
-    :type place_id: string
+g = geocoder.ip('me')
+if g.ok:
+    lat, lng = g.latlng
+    location = f"{lat},{lng}"
 
-    :rtype: string that represents a website url
-    """
-    place_endpoint = "https://maps.googleapis.com/maps/api/place/details/json"    
-    parameters = {
-        "key": api_key,
-        "place_id": place_id,
-        "fields": "website"
-    }
-    response = requests.get(place_endpoint, params=parameters)
-    results = json.loads(response.content)
-    website_url = results['result']['website']
-    print(website_url)
-    return website_url
+# Define a function to retrieve website URLs based on device location
+def get_website_urls(location):
+    # Use the Google Places API to search for nearby restaurants based on device location
+    restaurants = gmaps.places_nearby(location=location, radius=5000, type='restaurant')
 
+    # Iterate through the list of restaurants and retrieve their website URLs using getDetails
+    website_urls = []
+    for restaurant in restaurants['results']:
+        # Retrieve the place_id of the restaurant
+        place_id = restaurant['place_id']
+        
+        # Use getDetails to retrieve details of the restaurant, including its website URL
+        details = gmaps.place(place_id=place_id, fields=['website'])
+        
+        # Check if the restaurant has a website URL and append it to the list if available
+        if 'website' in details['result']:
+            website_urls.append(details['result']['website'])
+    
+    # Return the list of website URLs
+    return website_urls
 
-def retrieve_list_of_websites(place_id_list):
-    """Collects a list of website url from the list of place_id
+# Call the function with the device location as the parameter
+device_location = (location)  # Replace with actual GPS coordinates of device
+website_urls = get_website_urls(device_location)
 
-    :param place_id_list: list of place_id from pinging API or csv extracts
-    :type place_id_list: list
-
-    :rtype: list of website urls
-    """
-    website_list = []
-    i = 0
-
-    while i < len(place_id_list):
-        try:
-            website_list.append(retrieve_google_place_website(place_id=place_id_list[i]))
-        except KeyError:
-            print('Restaurant {} does not have a website.'.format(place_id_list[i]))
-        i += 1
-    print(website_list)
-    return website_list
+# Print the retrieved website URLs
+print(website_urls)

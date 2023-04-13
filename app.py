@@ -36,43 +36,43 @@ if g.ok:
 
 response_list = []
 
-def retrieve_google_place(api_key=os.getenv("PLACES_API_KEY"), coordinate=LOCATION, radius=5000):    
-    """Gather fields from the google place API
+# def retrieve_google_place(api_key=os.getenv("PLACES_API_KEY"), coordinate=LOCATION, radius=5000):    
+#     """Gather fields from the google place API
 
-    :param api_key: client's API key obtained from google cloud console, will look for local environment variable first
-    :type api_key: string
+#     :param api_key: client's API key obtained from google cloud console, will look for local environment variable first
+#     :type api_key: string
 
-    :param coordinate: latitude and longtitude separated by comma
-    :type coordinate: string
+#     :param coordinate: latitude and longtitude separated by comma
+#     :type coordinate: string
 
-    :param radius: define the distance in meters within which to return place results
-    :type radius: integer
+#     :param radius: define the distance in meters within which to return place results
+#     :type radius: integer
 
-    :rtype: dataframe with a list of places around the coordinate input and the radius defined and extracted fields
-            'name', 'place_id', 'rating', 'types', 'user_ratings_total', 'geometry.location.lat',
-            'geometry.location.lng'
-    """
-    search_endpoint = "https://maps.googleapis.com/maps/api/place/nearbysearch/json"
-    parameters = {
-        "key": api_key,
-        "location": coordinate,
-        "radius": radius,
-        "type": 'restaurant',
-        'website': 'website'
-    }
+#     :rtype: dataframe with a list of places around the coordinate input and the radius defined and extracted fields
+#             'name', 'place_id', 'rating', 'types', 'user_ratings_total', 'geometry.location.lat',
+#             'geometry.location.lng'
+#     """
+#     search_endpoint = "https://maps.googleapis.com/maps/api/place/nearbysearch/json"
+#     parameters = {
+#         "key": api_key,
+#         "location": coordinate,
+#         "radius": radius,
+#         "type": 'restaurant',
+#         'website': 'website'
+#     }
 
-    response = requests.get(search_endpoint, params=parameters)
-    results = json.loads(response.content)
-    response_list.extend(results['results'])
-    time.sleep(2)
-    while "next_page_token" in results:
-        parameters['pagetoken'] = results['next_page_token'],
-        res = requests.get(search_endpoint, params=parameters)
-        results = json.loads(res.content)
-        response_list.extend(results['results'])
-        time.sleep(2)
-    return response_list
-retrieve_google_place()
+#     response = requests.get(search_endpoint, params=parameters)
+#     results = json.loads(response.content)
+#     response_list.extend(results['results'])
+#     time.sleep(2)
+#     while "next_page_token" in results:
+#         parameters['pagetoken'] = results['next_page_token'],
+#         res = requests.get(search_endpoint, params=parameters)
+#         results = json.loads(res.content)
+#         response_list.extend(results['results'])
+#         time.sleep(2)
+#     return response_list
+# retrieve_google_place()
 
 
 # #pass response_list into a csv file for later use.
@@ -94,61 +94,61 @@ retrieve_google_place()
 
 # retrieve_google_place()
 
-import pandas as pd
-def create_response_df(response_list):
-    wanted_columns = ['name', 'place_id', 'rating', 'geometry.location.lat', 'geometry.location.lng', 'website']
+# import pandas as pd
+# def create_response_df(response_list):
+#     wanted_columns = ['name', 'place_id', 'rating', 'geometry.location.lat', 'geometry.location.lng', 'website']
 
-    new_response_list = [json_normalize(i, errors='ignore')[wanted_columns] for i in response_list]
-    df = concat(new_response_list)
-    df.to_csv('my_data.csv', index=False)
-    return df
-
-
-
-def retrieve_google_place_website(api_key=os.getenv("PLACES_API_KEY"), place_id=None):
-    """Retrieve the website for the provided place_id
-
-    :param api_key: client's API key obtained from google cloud console, will look for local environment variable first
-    :type api_key: string
-
-    :param place_id: unique identifier of a place
-    :type place_id: string
-
-    :rtype: string that represents a website url
-    """
-    place_endpoint = "https://maps.googleapis.com/maps/api/place/details/json"
-    parameters = {
-        "key": api_key,
-        "place_id": place_id,
-        "website": "website"
-    }
-    response = requests.get(place_endpoint, params=parameters)
-    results = json.loads(response.content)
-    website_url = results['result']['website']
-    return website_url
-retrieve_google_place_website()
+#     new_response_list = [json_normalize(i, errors='ignore')[wanted_columns] for i in response_list]
+#     df = concat(new_response_list)
+#     df.to_csv('my_data.csv', index=False)
+#     return df
 
 
 
+# def retrieve_google_place_website(api_key=os.getenv("PLACES_API_KEY"), place_id=None):
+#     """Retrieve the website for the provided place_id
 
-def retrieve_list_of_websites(place_id_list):
-    """Collects a list of website url from the list of place_id
+#     :param api_key: client's API key obtained from google cloud console, will look for local environment variable first
+#     :type api_key: string
 
-    :param place_id_list: list of place_id from pinging API or csv extracts
-    :type place_id_list: list
+#     :param place_id: unique identifier of a place
+#     :type place_id: string
 
-    :rtype: list of website urls
-    """
-    website_list = []
-    i = 0
+#     :rtype: string that represents a website url
+#     """
+#     place_endpoint = "https://maps.googleapis.com/maps/api/place/details/json"
+#     parameters = {
+#         "key": api_key,
+#         "place_id": place_id,
+#         "website": "website"
+#     }
+#     response = requests.get(place_endpoint, params=parameters)
+#     results = json.loads(response.content)
+#     website_url = results['result']['website']
+#     return website_url
+# # retrieve_google_place_website()
 
-    while i < len(place_id_list):
-        try:
-            website_list.append(retrieve_google_place_website(place_id=place_id_list[i]))
-        except KeyError:
-            print('Restaurant {} does not have a website.'.format(place_id_list[i]))
-        i += 1
-    return website_list
+
+
+
+# def retrieve_list_of_websites(place_id_list):
+#     """Collects a list of website url from the list of place_id
+
+#     :param place_id_list: list of place_id from pinging API or csv extracts
+#     :type place_id_list: list
+
+#     :rtype: list of website urls
+#     """
+#     website_list = []
+#     i = 0
+
+#     while i < len(place_id_list):
+#         try:
+#             website_list.append(retrieve_google_place_website(place_id=place_id_list[i]))
+#         except KeyError:
+#             print('Restaurant {} does not have a website.'.format(place_id_list[i]))
+#         i += 1
+#     return website_list
 
 
 
