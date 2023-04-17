@@ -36,44 +36,44 @@ if g.ok:
 
 
 
-response_list = []
+# response_list = []
 
-def retrieve_google_place(api_key=os.getenv("PLACES_API_KEY"), coordinate=location, radius=5000):    
-    """Gather fields from the google place API
+# def retrieve_google_place(api_key=os.getenv("PLACES_API_KEY"), coordinate=location, radius=5000):    
+#     """Gather fields from the google place API
 
-    :param api_key: client's API key obtained from google cloud console, will look for local environment variable first
-    :type api_key: string
+#     :param api_key: client's API key obtained from google cloud console, will look for local environment variable first
+#     :type api_key: string
 
-    :param coordinate: latitude and longtitude separated by comma
-    :type coordinate: string
+#     :param coordinate: latitude and longtitude separated by comma
+#     :type coordinate: string
 
-    :param radius: define the distance in meters within which to return place results
-    :type radius: integer
+#     :param radius: define the distance in meters within which to return place results
+#     :type radius: integer
 
-    :rtype: dataframe with a list of places around the coordinate input and the radius defined and extracted fields
-            'name', 'place_id', 'rating', 'types', 'user_ratings_total', 'geometry.location.lat',
-            'geometry.location.lng'
-    """
-    search_endpoint = "https://maps.googleapis.com/maps/api/place/nearbysearch/json"
-    parameters = {
-        "key": api_key,
-        "location": coordinate,
-        "radius": radius,
-        "type": 'restaurant',
-        'website': 'website'
-    }
+#     :rtype: dataframe with a list of places around the coordinate input and the radius defined and extracted fields
+#             'name', 'place_id', 'rating', 'types', 'user_ratings_total', 'geometry.location.lat',
+#             'geometry.location.lng'
+#     """
+#     search_endpoint = "https://maps.googleapis.com/maps/api/place/nearbysearch/json"
+#     parameters = {
+#         "key": api_key,
+#         "location": coordinate,
+#         "radius": radius,
+#         "type": 'restaurant',
+#         'website': 'website'
+#     }
 
-    response = requests.get(search_endpoint, params=parameters)
-    results = json.loads(response.content)
-    response_list.extend(results['results'])
-    time.sleep(2)
-    while "next_page_token" in results:
-        parameters['pagetoken'] = results['next_page_token'],
-        res = requests.get(search_endpoint, params=parameters)
-        results = json.loads(res.content)
-        response_list.extend(results['results'])
-        time.sleep(2)
-    return response_list
+#     response = requests.get(search_endpoint, params=parameters)
+#     results = json.loads(response.content)
+#     response_list.extend(results['results'])
+#     time.sleep(2)
+#     while "next_page_token" in results:
+#         parameters['pagetoken'] = results['next_page_token'],
+#         res = requests.get(search_endpoint, params=parameters)
+#         results = json.loads(res.content)
+#         response_list.extend(results['results'])
+#         time.sleep(2)
+#     return response_list
 
 
 # #pass response_list into a csv file for later use.
@@ -94,14 +94,14 @@ def retrieve_google_place(api_key=os.getenv("PLACES_API_KEY"), coordinate=locati
 #             })
 
 
-import pandas as pd
-def create_response_df(response_list):
-    wanted_columns = ['name', 'place_id', 'rating', 'geometry.location.lat', 'geometry.location.lng', 'website']
+# import pandas as pd
+# def create_response_df(response_list):
+#     wanted_columns = ['name', 'place_id', 'rating', 'geometry.location.lat', 'geometry.location.lng', 'website']
 
-    new_response_list = [json_normalize(i, errors='ignore')[wanted_columns] for i in response_list]
-    df = concat(new_response_list)
-    df.to_csv('my_data.csv', index=False)
-    return df
+#     new_response_list = [json_normalize(i, errors='ignore')[wanted_columns] for i in response_list]
+#     df = concat(new_response_list)
+#     df.to_csv('my_data.csv', index=False)
+#     return df
 
 
 
@@ -127,6 +127,33 @@ def create_response_df(response_list):
 #     website_url = results['result']['website']
 #     return website_url
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 API_KEY = os.getenv("PLACES_API_KEY")
 gmaps = googlemaps.Client(key=API_KEY)
 
@@ -150,70 +177,78 @@ def get_website_urls(location):
     # Return the list of website URLs
     return website_urls
 
+website_urls = ['https://locations.timhortons.ca/on/barrie/354-bayfield-st'] #'https://www.casamia.ca/'
+instagram_links = []  
+
+from bs4 import BeautifulSoup
+
+def scrape_instagram_links(website_urls):
+    
+    for url in website_urls:
+        response = requests.get(url)
+        soup = BeautifulSoup(response.content, 'html.parser')
+        instagram_tag = soup.find('a', href=lambda href: href and 'instagram.com' in href)
+        if instagram_tag:
+            instagram_link = instagram_tag['href']
+            instagram_links.append(instagram_link)
+    print(f"instagram Links: {instagram_links}")
+    return instagram_links
+
+image_urls = []
+def scrape_instagram_img(instagram_links):
+    for link in instagram_links:
+        response = requests.get(link)
+        print(response)
+        soup = BeautifulSoup(response.content, 'html.parser')
+        image_tags = soup.find_all('img', class_='_2di5p')
+        if response.status_code == 200:
+            for img in image_tags:
+                img_src = img.get('src')
+                image_urls.append(img_src)
+        else:
+            print(f"Error: Unable to retrieve media data for link {link}")    
+        return image_urls
+print(image_urls)
 
 
+# def instagram_discount_text(json_file):
+#     """Process the captions of a post to identify the posts with highest relevance to discount"""
+#     with open(json_file, 'r', encoding='utf-8') as json_format:
+#         comment_json = json.load(json_format)['GraphImages']
+#     image_url = [re.search('\/(?!.*\/).*(?=\.(jpg))', i['display_url']).group(0)[1:] for i in comment_json]
+#     image_text = [''.join(j['node']['text'] for j in i['edge_media_to_caption']['edges']) for i in comment_json]
+#     image_url_dict = dict(zip(image_url, image_text))
+#     discount_keyword = ['discount', '\%', '\$', '(\s|\W)off(\s|\W)', 'price', '(\s|\W)card(\s|\W)', 'certificate',
+#                         'stamp', 'point', 'sale', 'sample', 'offer']
+#     relevant_post = {(k, v) for p in discount_keyword for k, v in image_url_dict.items() if re.search(p, v) is not None}
+#     return relevant_post
 
 
-def scrape_social_media(url):
-    """Scrape the instagram account from the webpage's source code
-
-    :param url: url of the restaurant's website (ex, www.domain.(com)|(ca) OR domain.(com)|(ca))
-    :type url: string
-
-    :rtype: string that reflects the restaurant's social media website url (instagram.com/)
-    """
-    response = requests.get(url)
-    soup = BeautifulSoup(response.text, features='lxml')
-    if re.match('.+www.+', url) is not None:
-        domain_with_anchor = re.search("\..+\.(?!ca)|\..+\.(?!com)", url)
-        domain = url[domain_with_anchor.start() + 1:domain_with_anchor.end() - 1]
-    else:
-        domain_with_anchor = re.search("/.+\.(?!ca)|/.+\.(?!com)", url)
-        domain = url[domain_with_anchor.start() + 2:domain_with_anchor.end() - 1]
-    for link in soup.find_all('a', attrs={
-        'href': re.compile("(instagram)\.(com)/.*{}.*".format(domain[:5]))}):
-        social_media_url = link.get('href')
-        return social_media_url
+# def start_instagram_scraper():
+#     os.chdir(r"venv\Scripts")
+#     print(os.getcwd())
+#     cp = subprocess.run(
+#         ["instagram-scraper", "hakatashoryuken", "--comments"],
+#         universal_newlines=True, shell=True, check=True,
+#         stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+#     print(cp.stdout)
 
 
-def instagram_discount_text(json_file):
-    """Process the captions of a post to identify the posts with highest relevance to discount"""
-    with open(json_file, 'r', encoding='utf-8') as json_format:
-        comment_json = json.load(json_format)['GraphImages']
-    image_url = [re.search('\/(?!.*\/).*(?=\.(jpg))', i['display_url']).group(0)[1:] for i in comment_json]
-    image_text = [''.join(j['node']['text'] for j in i['edge_media_to_caption']['edges']) for i in comment_json]
-    image_url_dict = dict(zip(image_url, image_text))
-    discount_keyword = ['discount', '\%', '\$', '(\s|\W)off(\s|\W)', 'price', '(\s|\W)card(\s|\W)', 'certificate',
-                        'stamp', 'point', 'sale', 'sample', 'offer']
-    relevant_post = {(k, v) for p in discount_keyword for k, v in image_url_dict.items() if re.search(p, v) is not None}
-    return relevant_post
+# def printTohtml(relevant_post):
+#     html_text = """<html>
+#     <head>...</head>
+#     <body>
+#         {% for image, text in posts %}
+#             <div style="float:left"><img src="static/{{ image }}.jpg"></div>
+#             <div style="float:right">{{ text }}</div>
+#         {% endfor %}
+#         <div style="clear:both"></div>
+#     </body>
+#     </html>"""
 
-
-def start_instagram_scraper():
-    os.chdir(r"venv\Scripts")
-    print(os.getcwd())
-    cp = subprocess.run(
-        ["instagram-scraper", "hakatashoryuken", "--comments"],
-        universal_newlines=True, shell=True, check=True,
-        stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-    print(cp.stdout)
-
-
-def printTohtml(relevant_post):
-    html_text = """<html>
-    <head>...</head>
-    <body>
-        {% for image, text in posts %}
-            <div style="float:left"><img src="static/{{ image }}.jpg"></div>
-            <div style="float:right">{{ text }}</div>
-        {% endfor %}
-        <div style="clear:both"></div>
-    </body>
-    </html>"""
-
-    my_templ = Template(html_text)
-    with io.open('temp.html', 'w', encoding='utf-8') as f:
-        f.write(my_templ.render(posts=relevant_post))
+#     my_templ = Template(html_text)
+#     with io.open('temp.html', 'w', encoding='utf-8') as f:
+#         f.write(my_templ.render(posts=relevant_post))
 
 
 
@@ -234,6 +269,10 @@ if __name__ == "__main__":
     # start_instagram_scraper()
 
     # Call the function with the device location as the parameter
-    device_location = (location)  # Replace with actual GPS coordinates of device
-    website_urls = get_website_urls(device_location)
-    print(website_urls)
+    ##############################################
+    
+    # device_location = (location)  # Replace with actual GPS coordinates of device
+    # website_urls = get_website_urls(device_location)
+    # print(website_urls)
+    scrape_instagram_links(website_urls)
+    scrape_instagram_img(instagram_links)
