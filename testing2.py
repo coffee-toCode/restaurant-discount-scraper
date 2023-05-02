@@ -1,3 +1,0 @@
-from websitelist_from_device_location import website_urls
-
-
