@@ -92,7 +92,7 @@ def retrieve_google_place(API_KEY, coordinate=location, radius=5000):
 #pass response_list into a csv file for later use.
 def generate_csv(response_list):
     with open('response_list.csv', mode='w', newline='') as csv_file:
-        fieldnames = ['name', 'place_id', 'rating', 'types', 'user_ratings_total', 'geometry.location.lat', 'geometry.location.lng']
+        fieldnames = ['name', 'place_id', 'rating', 'types', 'user_ratings_total', 'website', 'geometry.location.lat', 'geometry.location.lng']
         writer = csv.DictWriter(csv_file, fieldnames=fieldnames)
         writer.writeheader()
         for place in response_list:
@@ -108,35 +108,12 @@ def generate_csv(response_list):
 
 #pass response_list to create a dataframe
 def create_response_df(response_list):
-    wanted_columns = ['name', 'place_id', 'rating', 'geometry.location.lat', 'geometry.location.lng', 'website']
+    wanted_columns = ['name', 'place_id', 'rating', 'website', 'geometry.location.lat', 'geometry.location.lng']
 
     new_response_list = [json_normalize(i, errors='ignore')[wanted_columns] for i in response_list]
     df = concat(new_response_list)
     df.to_csv('my_data.csv', index=False)
     return df
-
-# # This function returns a string that represents the website url for the given place_id.
-# def retrieve_google_place_website(API_KEY, place_id=None):
-#     """Retrieve the website for the provided place_id
-
-#     :param api_key: client's API key obtained from google cloud console, will look for local environment variable first
-#     :type api_key: string
-
-#     :param place_id: unique identifier of a place
-#     :type place_id: string
-
-#     :rtype: string that represents a website url
-#     """
-#     place_endpoint = "https://maps.googleapis.com/maps/api/place/details/json"
-#     parameters = {
-#         "key": API_KEY,
-#         "place_id": place_id,
-#         "website": "website"
-#     }
-#     response = requests.get(place_endpoint, params=parameters)
-#     results = json.loads(response.content)
-#     website_url = results['result']['website']
-#     return website_url
 
 def get_website_urls(location):
     # Use the Google Places API to search for nearby restaurants based on device location
@@ -188,4 +165,6 @@ def scrape_instagram_img(instagram_links):
 
 
 if __name__ == "__main__":
-    retrieve_google_place()
+    retrieve_google_place(API_KEY)
+    generate_csv(response_list)
+    create_response_df(response_list)
