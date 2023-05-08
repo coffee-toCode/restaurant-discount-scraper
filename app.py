@@ -1,18 +1,10 @@
 import os
 import time
-import timeit
 import pandas as pd
-from pandas import json_normalize, concat, read_csv
+from pandas import json_normalize, concat
 import requests
 import json
 from bs4 import BeautifulSoup
-from jinja2 import Template
-import io
-import sys
-import subprocess
-import shutil
-from urllib import request
-import doctest
 import csv
 import googlemaps
 import geocoder
@@ -31,8 +23,7 @@ API_KEY = os.getenv("PLACES_API_KEY")
 gmaps = googlemaps.Client(key=API_KEY)
 response_list = []
 website_urls = []
-instagram_links = [] 
-image_urls = []
+instagram_links = []
 
 
 
@@ -92,7 +83,7 @@ def retrieve_google_place(API_KEY, coordinate=location, radius=5000):
 #pass response_list into a csv file for later use.
 def generate_csv(response_list):
     with open('response_list.csv', mode='w', newline='') as csv_file:
-        fieldnames = ['name', 'place_id', 'rating', 'types', 'user_ratings_total', 'website', 'geometry.location.lat', 'geometry.location.lng']
+        fieldnames = ['name', 'place_id', 'rating', 'types', 'user_ratings_total', 'geometry.location.lat', 'geometry.location.lng']
         writer = csv.DictWriter(csv_file, fieldnames=fieldnames)
         writer.writeheader()
         for place in response_list:
@@ -108,7 +99,7 @@ def generate_csv(response_list):
 
 #pass response_list to create a dataframe
 def create_response_df(response_list):
-    wanted_columns = ['name', 'place_id', 'rating', 'website', 'geometry.location.lat', 'geometry.location.lng']
+    wanted_columns = ['name', 'place_id', 'rating', 'geometry.location.lat', 'geometry.location.lng']
 
     new_response_list = [json_normalize(i, errors='ignore')[wanted_columns] for i in response_list]
     df = concat(new_response_list)
@@ -134,8 +125,10 @@ def get_website_urls(location):
     # Return the list of website URLs
     return website_urls
 
+
 def scrape_instagram_links(website_urls):
-    
+    # must search each page and scrape instagram tag fro that url
+    instagram_links = []
     for url in website_urls:
         response = requests.get(url)
         soup = BeautifulSoup(response.content, 'html.parser')
@@ -147,24 +140,20 @@ def scrape_instagram_links(website_urls):
     return instagram_links
 
 
-def scrape_instagram_img(instagram_links):
-    for link in instagram_links:
-        response = requests.get(link)
-        print(response)
-        soup = BeautifulSoup(response.content, 'html.parser')
-        image_tags = soup.find_all('img', class_='_2di5p')
-        if response.status_code == 200:
-            for img in image_tags:
-                img_src = img.get('src')
-                image_urls.append(img_src)
-        else:
-            print(f"Error: Unable to retrieve media data for link {link}")    
-    print(image_urls)    
-    return image_urls
+
+
+
+
+
+
+
+
 
 
 
 if __name__ == "__main__":
-    retrieve_google_place(API_KEY)
-    generate_csv(response_list)
-    create_response_df(response_list)
+    # retrieve_google_place(API_KEY)
+    # generate_csv(response_list)
+    #create_response_df(response_list)
+    get_website_urls(location)
+    scrape_instagram_links(website_urls)
