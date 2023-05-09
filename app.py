@@ -103,7 +103,7 @@ def create_response_df(response_list):
 
     new_response_list = [json_normalize(i, errors='ignore')[wanted_columns] for i in response_list]
     df = concat(new_response_list)
-    df.to_csv('my_data.csv', index=False)
+    df.to_csv('my_data_frame.csv', index=False)
     return df
 
 def get_website_urls(location):
@@ -152,8 +152,8 @@ def scrape_instagram_links(website_urls):
 
 
 if __name__ == "__main__":
-    # retrieve_google_place(API_KEY)
-    # generate_csv(response_list)
-    #create_response_df(response_list)
+    retrieve_google_place(API_KEY)
+    generate_csv(response_list)
+    create_response_df(response_list)
     get_website_urls(location)
     scrape_instagram_links(website_urls)
