@@ -142,15 +142,6 @@ def scrape_instagram_links(website_urls):
 
 
 
-
-
-
-
-
-
-
-
-
 if __name__ == "__main__":
     retrieve_google_place(API_KEY)
     generate_csv(response_list)
